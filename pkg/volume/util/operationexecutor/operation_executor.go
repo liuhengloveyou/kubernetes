@@ -585,15 +585,18 @@ func (oe *operationExecutor) IsOperationPending(volumeName v1.UniqueVolumeName, 
 	return oe.pendingOperations.IsOperationPending(volumeName, podName)
 }
 
-func (oe *operationExecutor) AttachVolume(
-	volumeToAttach VolumeToAttach,
-	actualStateOfWorld ActualStateOfWorldAttacherUpdater) error {
+func (oe *operationExecutor) AttachVolume(volumeToAttach VolumeToAttach, actualStateOfWorld ActualStateOfWorldAttacherUpdater) error {
 	generatedOperations, err := oe.operationGenerator.GenerateAttachVolumeFunc(volumeToAttach, actualStateOfWorld)
 	if err != nil {
 		return err
 	}
 
-	glog.Errorf("@@@@@@ %s\n\n", volumeToAttach.VolumeName)
+	for o := range volumeToAttach.ScheduledPods {
+		podName := util.GetUniquePodName(o)
+		glog.Errorf("@@@@@@@@ %#v %#v %#v\n\n", podName, volumeToAttach.NodeName, volumeToAttach.VolumeName)
+	}
+
+	glog.Errorf("@@@@@@@@ %#v %#v\n\n", volumeToAttach.NodeName, volumeToAttach.VolumeName)
 
 	return oe.pendingOperations.Run(volumeToAttach.VolumeName, "" /* podName */, generatedOperations)
 }
