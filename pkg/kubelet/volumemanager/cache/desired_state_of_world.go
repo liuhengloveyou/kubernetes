@@ -22,6 +22,7 @@ package cache
 
 import (
 	"fmt"
+	"strings"
 	"sync"
 
 	"k8s.io/api/core/v1"
@@ -209,7 +210,8 @@ func (dsw *desiredStateOfWorld) AddPodToVolume(
 				if volumeSource.Options == nil {
 					volumeSource.Options = make(map[string]string)
 				}
-				volumeSource.Options["volumeID"] = string(podName)
+
+				volumeSource.Options["volumeID"] = strings.Replace(string(podName), "-", "", -1) // HUYA
 			}
 		}
 
