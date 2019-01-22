@@ -280,9 +280,7 @@ func (og *operationGenerator) GenerateBulkVolumeVerifyFunc(
 
 }
 
-func (og *operationGenerator) GenerateAttachVolumeFunc(
-	volumeToAttach VolumeToAttach,
-	actualStateOfWorld ActualStateOfWorldAttacherUpdater) (volumetypes.GeneratedOperations, error) {
+func (og *operationGenerator) GenerateAttachVolumeFunc(volumeToAttach VolumeToAttach, actualStateOfWorld ActualStateOfWorldAttacherUpdater) (volumetypes.GeneratedOperations, error) {
 	// Get attacher plugin
 	eventRecorderFunc := func(err *error) {
 		if *err != nil {
@@ -306,7 +304,7 @@ func (og *operationGenerator) GenerateAttachVolumeFunc(
 	}
 
 	attachVolumeFunc := func() (error, error) {
-		glog.Infof("@@@@@@ %#v\n\n", volumeToAttach)
+		glog.Errorf("@@@@@@@@ %#v %#v\n\n\n", volumeToAttach.VolumeName, volumeToAttach.NodeName)
 
 		// Execute attach
 		devicePath, attachErr := volumeAttacher.Attach(
