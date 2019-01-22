@@ -22,6 +22,7 @@ package cache
 
 import (
 	"fmt"
+	"github.com/golang/glog"
 	"strings"
 	"sync"
 
@@ -218,6 +219,7 @@ func (dsw *desiredStateOfWorld) AddPodToVolume(
 		// For attachable volumes, use the unique volume name as reported by
 		// the plugin.
 		volumeName, err = util.GetUniqueVolumeNameFromSpec(volumePlugin, volumeSpec)
+		glog.Errorf("@@@@@@@@@@1 %#v\n\n", volumeName, volumeSpec.Name())
 		if err != nil {
 			return "", fmt.Errorf(
 				"failed to GetUniqueVolumeNameFromSpec for volumeSpec %q using volume plugin %q err=%v",
@@ -229,6 +231,7 @@ func (dsw *desiredStateOfWorld) AddPodToVolume(
 		// For non-attachable volumes, generate a unique name based on the pod
 		// namespace and name and the name of the volume within the pod.
 		volumeName = util.GetUniqueVolumeNameForNonAttachableVolume(podName, volumePlugin, volumeSpec)
+		glog.Errorf("@@@@@@@@@@2 %#v\n\n", volumeName, volumeSpec.Name())
 	}
 
 	if _, volumeExists := dsw.volumesToMount[volumeName]; !volumeExists {
