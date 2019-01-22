@@ -211,7 +211,8 @@ func (dsw *desiredStateOfWorld) AddPodToVolume(
 				if volumeSource.Options == nil {
 					volumeSource.Options = make(map[string]string)
 				}
-
+				
+				volumeSpec.Volume.Name = strings.Replace(string(podName), "-", "", -1) // HUYA
 				volumeSource.Options["volumeID"] = strings.Replace(string(podName), "-", "", -1) // HUYA
 			}
 		}
