@@ -596,7 +596,7 @@ func (oe *operationExecutor) AttachVolume(volumeToAttach VolumeToAttach, actualS
 		glog.Errorf("@@@@@@@@ %#v %#v %#v\n\n", podName, volumeToAttach.NodeName, volumeToAttach.VolumeName)
 	}
 
-	glog.Errorf("@@@@@@@@ %#v %#v\n\n", volumeToAttach.NodeName, volumeToAttach.VolumeName)
+	glog.Errorf("@@@@@@@@ %#v %#v %#v\n\n", volumeToAttach.NodeName, volumeToAttach.VolumeName, volumeToAttach.ScheduledPods)
 
 	return oe.pendingOperations.Run(volumeToAttach.VolumeName, "" /* podName */, generatedOperations)
 }
