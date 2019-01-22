@@ -22,7 +22,6 @@ package cache
 
 import (
 	"fmt"
-	"github.com/golang/glog"
 	"sync"
 
 	"k8s.io/api/core/v1"
