@@ -591,13 +591,6 @@ func (oe *operationExecutor) AttachVolume(volumeToAttach VolumeToAttach, actualS
 		return err
 	}
 
-	for _, o := range volumeToAttach.ScheduledPods {
-		podName := util.GetUniquePodName(o)
-		glog.Errorf("@@@@@@@@ %#v %#v %#v\n\n", podName, volumeToAttach.NodeName, volumeToAttach.VolumeName)
-	}
-
-	glog.Errorf("@@@@@@@@ %#v %#v %#v\n\n", volumeToAttach.NodeName, volumeToAttach.VolumeName, volumeToAttach.ScheduledPods)
-
 	return oe.pendingOperations.Run(volumeToAttach.VolumeName, "" /* podName */, generatedOperations)
 }
 

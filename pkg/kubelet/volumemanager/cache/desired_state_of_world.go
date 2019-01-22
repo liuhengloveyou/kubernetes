@@ -214,12 +214,9 @@ func (dsw *desiredStateOfWorld) AddPodToVolume(
 			}
 		}
 
-
-
 		// For attachable volumes, use the unique volume name as reported by
 		// the plugin.
 		volumeName, err = util.GetUniqueVolumeNameFromSpec(volumePlugin, volumeSpec)
-		glog.Errorf("AddPodToVolume @@@@@@ ", volumePlugin.GetPluginName(), string(podName))
 		if err != nil {
 			return "", fmt.Errorf(
 				"failed to GetUniqueVolumeNameFromSpec for volumeSpec %q using volume plugin %q err=%v",

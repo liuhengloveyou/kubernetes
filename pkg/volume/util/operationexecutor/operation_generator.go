@@ -304,8 +304,6 @@ func (og *operationGenerator) GenerateAttachVolumeFunc(volumeToAttach VolumeToAt
 	}
 
 	attachVolumeFunc := func() (error, error) {
-		glog.Errorf("@@@@@@@@ %#v %#v\n\n\n", volumeToAttach.VolumeName, volumeToAttach.NodeName)
-
 		// Execute attach
 		devicePath, attachErr := volumeAttacher.Attach(
 			volumeToAttach.VolumeSpec, volumeToAttach.NodeName)

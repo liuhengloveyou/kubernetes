@@ -185,8 +185,6 @@ func (rc *reconciler) reconcile() {
 
 	// Ensure volumes that should be attached/mounted are attached/mounted.
 	for _, volumeToMount := range rc.desiredStateOfWorld.GetVolumesToMount() {
-		//	glog.Errorf("reconcile @@@@@@@@ %#v %#v \n\nx", volumeToMount.PodName, volumeToMount.VolumeName)
-
 		volMounted, devicePath, err := rc.actualStateOfWorld.PodExistsInVolume(volumeToMount.PodName, volumeToMount.VolumeName)
 		volumeToMount.DevicePath = devicePath
 		if cache.IsVolumeNotAttachedError(err) {
@@ -214,10 +212,7 @@ func (rc *reconciler) reconcile() {
 				volumeToAttach := operationexecutor.VolumeToAttach{
 					VolumeName: volumeToMount.VolumeName,
 					VolumeSpec: volumeToMount.VolumeSpec,
-					NodeName:   rc.nodeName,
-					// 	ScheduledPods []*v1.Pod
-				}
-				volumeToAttach.ScheduledPods = append(volumeToAttach.ScheduledPods, volumeToMount.Pod)
+					NodeName:   rc.nodeName}
 
 				glog.V(5).Infof(volumeToAttach.GenerateMsgDetailed("Starting operationExecutor.AttachVolume", ""))
 				err := rc.operationExecutor.AttachVolume(volumeToAttach, rc.actualStateOfWorld)
