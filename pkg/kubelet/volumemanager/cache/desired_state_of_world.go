@@ -22,6 +22,7 @@ package cache
 
 import (
 	"fmt"
+	"github.com/golang/glog"
 	"sync"
 
 	"k8s.io/api/core/v1"
@@ -203,10 +204,22 @@ func (dsw *desiredStateOfWorld) AddPodToVolume(
 	// or not.
 	attachable := dsw.isAttachableVolume(volumeSpec)
 	if attachable {
+		if "flexvolume-kubernetes.io/lvm" == volumePlugin.GetPluginName() {
+			if volumeSpec.Volume != nil && volumeSpec.Volume.FlexVolume != nil {
+				volumeSource := volumeSpec.Volume.FlexVolume
+				if volumeSource.Options == nil {
+					volumeSource.Options = make(map[string]string)
+				}
+				volumeSource.Options["volumeID"] = string(podName)
+			}
+		}
+
+
+
 		// For attachable volumes, use the unique volume name as reported by
 		// the plugin.
-		volumeName, err =
-			util.GetUniqueVolumeNameFromSpec(volumePlugin, volumeSpec)
+		volumeName, err = util.GetUniqueVolumeNameFromSpec(volumePlugin, volumeSpec)
+		glog.Errorf("AddPodToVolume @@@@@@ ", volumePlugin.GetPluginName(), string(podName))
 		if err != nil {
 			return "", fmt.Errorf(
 				"failed to GetUniqueVolumeNameFromSpec for volumeSpec %q using volume plugin %q err=%v",
