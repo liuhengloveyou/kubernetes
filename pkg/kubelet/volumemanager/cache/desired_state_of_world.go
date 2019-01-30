@@ -205,13 +205,14 @@ func (dsw *desiredStateOfWorld) AddPodToVolume(
 	// or not.
 	attachable := dsw.isAttachableVolume(volumeSpec)
 	if attachable {
-		if "flexvolume-kubernetes.io/lvm" == volumePlugin.GetPluginName() {
+		if "flexvolume-kubernetes.io/lvm" == volumePlugin.GetPluginName() ||
+			"flexvolume-alicloud.com/disk" == volumePlugin.GetPluginName() {
 			if volumeSpec.Volume != nil && volumeSpec.Volume.FlexVolume != nil {
 				volumeSource := volumeSpec.Volume.FlexVolume
 				if volumeSource.Options == nil {
 					volumeSource.Options = make(map[string]string)
 				}
-				
+
 				volumeSpec.Volume.Name = strings.Replace(string(podName), "-", "", -1) // HUYA
 				volumeSource.Options["volumeID"] = strings.Replace(string(podName), "-", "", -1) // HUYA
 			}
