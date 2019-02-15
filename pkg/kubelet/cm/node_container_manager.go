@@ -157,6 +157,9 @@ func getCgroupConfig(rl v1.ResourceList) *ResourceConfig {
 		// CPU is defined in milli-cores.
 		val := MilliCPUToShares(q.MilliValue())
 		rc.CpuShares = &val
+		// Set CPU Quota
+		valQuota := MilliCPUToQuota(q.MilliValue(),100000)
+		rc.CpuQuota = &valQuota
 	}
 	if utilfeature.DefaultFeatureGate.Enabled(kubefeatures.HugePages) {
 		rc.HugePageLimit = HugePageLimits(rl)

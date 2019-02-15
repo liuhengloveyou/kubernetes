@@ -19,6 +19,7 @@ package predicates
 import (
 	"errors"
 	"fmt"
+	"k8s.io/klog"
 	"os"
 	"strconv"
 	"sync"
@@ -47,6 +48,7 @@ import (
 	schedutil "k8s.io/kubernetes/pkg/scheduler/util"
 	"k8s.io/kubernetes/pkg/scheduler/volumebinder"
 	volumeutil "k8s.io/kubernetes/pkg/volume/util"
+	"k8s.io/apimachinery/pkg/api/resource"
 )
 
 const (
@@ -114,6 +116,8 @@ const (
 	GCEPDVolumeFilterType = "GCE"
 	// AzureDiskVolumeFilterType defines the filter name for AzureDiskVolumeFilter.
 	AzureDiskVolumeFilterType = "AzureDisk"
+
+	ReservedLvmStorageSize = "ReservedLvmStorageSize"
 )
 
 // IMPORTANT NOTE for predicate developers:
@@ -710,6 +714,18 @@ func PodFitsResources(pod *v1.Pod, meta algorithm.PredicateMetadata, nodeInfo *s
 		predicateFails = append(predicateFails, NewInsufficientResourceError(v1.ResourcePods, 1, int64(len(nodeInfo.Pods())), int64(allowedPodNumber)))
 	}
 
+	requestStorage := schedulercache.GetFlexVolumeSizeForPod(pod)
+	var reservedLvmStorageSize int64
+	reservedLvmStorageSize = 0
+	if requestStorage > 0 {
+		if len(node.Annotations) > 0 && node.Annotations[ReservedLvmStorageSize] != "" {
+			reservedStorage, err := resource.ParseQuantity(node.Annotations[ReservedLvmStorageSize])
+			if err == nil {
+				reservedLvmStorageSize = reservedStorage.Value()
+			}
+		}
+	}
+
 	// No extended resources should be ignored by default.
 	ignoredExtendedResources := sets.NewString()
 
@@ -726,6 +742,7 @@ func PodFitsResources(pod *v1.Pod, meta algorithm.PredicateMetadata, nodeInfo *s
 	if podRequest.MilliCPU == 0 &&
 		podRequest.Memory == 0 &&
 		podRequest.EphemeralStorage == 0 &&
+		requestStorage == 0 &&
 		len(podRequest.ScalarResources) == 0 {
 		return len(predicateFails) == 0, predicateFails, nil
 	}
@@ -736,6 +753,10 @@ func PodFitsResources(pod *v1.Pod, meta algorithm.PredicateMetadata, nodeInfo *s
 	}
 	if allocatable.Memory < podRequest.Memory+nodeInfo.RequestedResource().Memory {
 		predicateFails = append(predicateFails, NewInsufficientResourceError(v1.ResourceMemory, podRequest.Memory, nodeInfo.RequestedResource().Memory, allocatable.Memory))
+	}
+	klog.Infof("Schedule Pod allocatable: %+v reservedLvmStorageSize: %+v requestStorage %v nodeInfo.RequestedResource().Storage %v fox.%s \n", allocatable.Storage, reservedLvmStorageSize, requestStorage, nodeInfo.RequestedResource().Storage,node.Name)
+	if allocatable.Storage-reservedLvmStorageSize < requestStorage+nodeInfo.RequestedResource().Storage {
+		predicateFails = append(predicateFails, NewInsufficientResourceError(v1.ResourceStorage, requestStorage, nodeInfo.RequestedResource().Storage, allocatable.Storage))
 	}
 	if allocatable.EphemeralStorage < podRequest.EphemeralStorage+nodeInfo.RequestedResource().EphemeralStorage {
 		predicateFails = append(predicateFails, NewInsufficientResourceError(v1.ResourceEphemeralStorage, podRequest.EphemeralStorage, nodeInfo.RequestedResource().EphemeralStorage, allocatable.EphemeralStorage))

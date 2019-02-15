@@ -131,6 +131,7 @@ func (transientSchedInfo *transientSchedulerInfo) resetTransientSchedulerInfo() 
 type Resource struct {
 	MilliCPU         int64
 	Memory           int64
+	Storage          int64
 	EphemeralStorage int64
 	// We store allowedPodNumber (which is Node.Status.Allocatable.Pods().Value())
 	// explicitly as int, to avoid conversions and improve performance.
@@ -158,6 +159,8 @@ func (r *Resource) Add(rl v1.ResourceList) {
 			r.MilliCPU += rQuant.MilliValue()
 		case v1.ResourceMemory:
 			r.Memory += rQuant.Value()
+		case v1.ResourceStorage:
+			r.Storage = rQuant.Value()
 		case v1.ResourcePods:
 			r.AllowedPodNumber += int(rQuant.Value())
 		case v1.ResourceEphemeralStorage:
@@ -175,6 +178,7 @@ func (r *Resource) ResourceList() v1.ResourceList {
 	result := v1.ResourceList{
 		v1.ResourceCPU:              *resource.NewMilliQuantity(r.MilliCPU, resource.DecimalSI),
 		v1.ResourceMemory:           *resource.NewQuantity(r.Memory, resource.BinarySI),
+		v1.ResourceStorage:   		 *resource.NewQuantity(r.Storage, resource.BinarySI),
 		v1.ResourcePods:             *resource.NewQuantity(int64(r.AllowedPodNumber), resource.BinarySI),
 		v1.ResourceEphemeralStorage: *resource.NewQuantity(r.EphemeralStorage, resource.BinarySI),
 	}
@@ -193,6 +197,7 @@ func (r *Resource) Clone() *Resource {
 	res := &Resource{
 		MilliCPU:         r.MilliCPU,
 		Memory:           r.Memory,
+		Storage:   r.Storage,
 		AllowedPodNumber: r.AllowedPodNumber,
 		EphemeralStorage: r.EphemeralStorage,
 	}
@@ -448,6 +453,7 @@ func (n *NodeInfo) AddPod(pod *v1.Pod) {
 	res, non0CPU, non0Mem := calculateResource(pod)
 	n.requestedResource.MilliCPU += res.MilliCPU
 	n.requestedResource.Memory += res.Memory
+	n.requestedResource.Storage += res.Storage
 	n.requestedResource.EphemeralStorage += res.EphemeralStorage
 	if n.requestedResource.ScalarResources == nil && len(res.ScalarResources) > 0 {
 		n.requestedResource.ScalarResources = map[v1.ResourceName]int64{}
@@ -503,6 +509,7 @@ func (n *NodeInfo) RemovePod(pod *v1.Pod) error {
 
 			n.requestedResource.MilliCPU -= res.MilliCPU
 			n.requestedResource.Memory -= res.Memory
+			n.requestedResource.Storage -= res.Storage
 			n.requestedResource.EphemeralStorage -= res.EphemeralStorage
 			if len(res.ScalarResources) > 0 && n.requestedResource.ScalarResources == nil {
 				n.requestedResource.ScalarResources = map[v1.ResourceName]int64{}
@@ -524,6 +531,21 @@ func (n *NodeInfo) RemovePod(pod *v1.Pod) error {
 	return fmt.Errorf("no corresponding pod %s in pods of node %s", pod.Name, n.node.Name)
 }
 
+func GetFlexVolumeSizeForPod(pod *v1.Pod) int64 {
+	var sumSize int64
+	for _, volume := range pod.Spec.Volumes {
+		if volume.FlexVolume != nil {
+			if size, ok := volume.FlexVolume.Options["size"]; ok {
+				volumeSize, err := resource.ParseQuantity(size)
+				if err == nil {
+					sumSize += volumeSize.Value()
+				}
+			}
+		}
+	}
+	return sumSize
+}
+
 func calculateResource(pod *v1.Pod) (res Resource, non0CPU int64, non0Mem int64) {
 	resPtr := &res
 	for _, c := range pod.Spec.Containers {
@@ -534,6 +556,8 @@ func calculateResource(pod *v1.Pod) (res Resource, non0CPU int64, non0Mem int64)
 		non0Mem += non0MemReq
 		// No non-zero resources for GPUs or opaque resources.
 	}
+
+	res.Storage = GetFlexVolumeSizeForPod(pod)
 
 	return
 }
