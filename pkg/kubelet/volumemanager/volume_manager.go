@@ -124,6 +124,9 @@ type VolumeManager interface {
 	// has been unmounted (as indicated in actual state of world).
 	GetVolumesInUse() []v1.UniqueVolumeName
 
+	// Get capacity for flexvolume plugin.
+	GetCapacityForFlexVolume() (string, error)
+
 	// ReconcilerStatesHasBeenSynced returns true only after the actual states in reconciler
 	// has been synced at least once after kubelet starts so that it is safe to update mounted
 	// volume list retrieved from actual state.
@@ -317,6 +320,18 @@ func (vm *volumeManager) GetVolumesInUse() []v1.UniqueVolumeName {
 		return string(volumesToReportInUse[i]) < string(volumesToReportInUse[j])
 	})
 	return volumesToReportInUse
+}
+
+// Get capacity for flexvolume plugin.
+func (vm *volumeManager) GetCapacityForFlexVolume() (string, error) {
+	flexVolumePlugin, err := vm.volumePluginMgr.FindFlexPluginByName("flexvolume-kubernetes.io/lvm")
+	if err != nil {
+		glog.Errorf("Failed to get plugin for lvm. Error:%s", err.Error())
+		return "", err
+	}
+	capacity := flexVolumePlugin.Capacity()
+	//klog.Infof("Capacity for flexVolumePlugin:%s", capacity)
+	return capacity, nil
 }
 
 func (vm *volumeManager) ReconcilerStatesHasBeenSynced() bool {

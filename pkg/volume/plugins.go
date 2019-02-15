@@ -151,6 +151,14 @@ type VolumePlugin interface {
 	SupportsBulkVolumeVerification() bool
 }
 
+// FlexVolumePlugin is an extended interface of VolumePlugin and is used
+// volumes that is provisioned/attached using an exec based plugin
+type FlexVolumePlugin interface {
+	VolumePlugin
+	// Capacity returns the storage capacity for the flexVolume.
+	Capacity() string
+}
+
 // PersistentVolumePlugin is an extended interface of VolumePlugin and is used
 // by volumes that want to provide long term persistence of data
 type PersistentVolumePlugin interface {
@@ -702,6 +710,19 @@ func (pm *VolumePluginMgr) FindDeletablePluginBySpec(spec *Spec) (DeletableVolum
 		return deletableVolumePlugin, nil
 	}
 	return nil, fmt.Errorf("no deletable volume plugin matched")
+}
+
+// FindFlexPluginByName fetches a flex volume plugin by name.  If
+// no plugin is found, returns error.
+func (pm *VolumePluginMgr) FindFlexPluginByName(name string) (FlexVolumePlugin, error) {
+	volumePlugin, err := pm.FindPluginByName(name)
+	if err != nil {
+		return nil, err
+	}
+	if flexVolumePlugin, ok := volumePlugin.(FlexVolumePlugin); ok {
+		return flexVolumePlugin, nil
+	}
+	return nil, fmt.Errorf("no flex volume plugin matched")
 }
 
 // FindDeletablePluginByName fetches a persistent volume plugin by name.  If

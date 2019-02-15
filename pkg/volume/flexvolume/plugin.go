@@ -38,6 +38,7 @@ const (
 	flexVolumePluginName       = "kubernetes.io/flexvolume"
 	flexVolumePluginNamePrefix = "flexvolume-"
 )
+const lvmPluginName = "flexvolume-kubernetes.io/lvm"
 
 // FlexVolumePlugin object.
 type flexVolumePlugin struct {
