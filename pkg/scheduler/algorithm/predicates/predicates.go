@@ -19,7 +19,6 @@ package predicates
 import (
 	"errors"
 	"fmt"
-	"k8s.io/klog"
 	"os"
 	"strconv"
 	"sync"
@@ -754,7 +753,7 @@ func PodFitsResources(pod *v1.Pod, meta algorithm.PredicateMetadata, nodeInfo *s
 	if allocatable.Memory < podRequest.Memory+nodeInfo.RequestedResource().Memory {
 		predicateFails = append(predicateFails, NewInsufficientResourceError(v1.ResourceMemory, podRequest.Memory, nodeInfo.RequestedResource().Memory, allocatable.Memory))
 	}
-	klog.Infof("Schedule Pod allocatable: %+v reservedLvmStorageSize: %+v requestStorage %v nodeInfo.RequestedResource().Storage %v fox.%s \n", allocatable.Storage, reservedLvmStorageSize, requestStorage, nodeInfo.RequestedResource().Storage,node.Name)
+	glog.Infof("Schedule Pod allocatable: %+v reservedLvmStorageSize: %+v requestStorage %v nodeInfo.RequestedResource().Storage %v fox.%s \n", allocatable.Storage, reservedLvmStorageSize, requestStorage, nodeInfo.RequestedResource().Storage,node.Name)
 	if allocatable.Storage-reservedLvmStorageSize < requestStorage+nodeInfo.RequestedResource().Storage {
 		predicateFails = append(predicateFails, NewInsufficientResourceError(v1.ResourceStorage, requestStorage, nodeInfo.RequestedResource().Storage, allocatable.Storage))
 	}
